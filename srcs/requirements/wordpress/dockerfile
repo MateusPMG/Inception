@@ -1,0 +1,28 @@
+# Use Debian Bullseye as base image
+FROM debian:bullseye
+
+# Install PHP 7.4 and necessary extensions
+RUN apt-get update && apt-get install -y \
+    php7.4 \
+    php7.4-fpm \
+    php7.4-mysql \
+    php7.4-gd \
+    php7.4-curl \
+    php7.4-xml \
+    php7.4-mbstring \
+    && rm -rf /var/lib/apt/lists/*
+
+#copy configurations
+COPY ./conf/create_wordpress.sh /tmp/create_wordpress.sh
+
+# Expose port 9000 for PHP-FPM
+EXPOSE 9000
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy WordPress files into the container 
+COPY wordpress /var/www/html
+
+#Configuration must run when container starts
+ENTRYPOINT ["/tmp/wordpress_conf.sh"]

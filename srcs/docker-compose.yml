@@ -1,0 +1,26 @@
+version: '2.23.3'
+
+services:
+  nginx:
+    image: debian:bullseye
+    # Add Nginx configuration and other settings as needed
+    # ...
+
+  wordpress:
+    image: debian:bullseye
+    # Add WordPress configuration and other settings as needed
+    environment:
+      - WORDPRESS_DB_HOST=mariadb
+      - WORDPRESS_DB_USER=${WORDPRESS_DB_USER}
+      - WORDPRESS_DB_PASSWORD=${WORDPRESS_DB_PASSWORD}
+      - WORDPRESS_DB_NAME=${WORDPRESS_DB_NAME}
+    # ...
+
+  mariadb:
+    image: debian:bullseye
+    # Add MariaDB configuration and other settings as needed
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}  
