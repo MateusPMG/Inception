@@ -12,7 +12,15 @@ RUN apt-get update && apt-get install -y \
     php7.4-mbstring \
     && rm -rf /var/lib/apt/lists/*
 
-#copy configurations
+# Install wordpress cli in the local host, the script will then set it up
+apt-get install -y wget && \
+wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar &&\
+chmod +x wp-cli.phar && \
+mv wp-cli.phar /usr/bin/wp && \
+# Clean up after installation, removes package lists from apt-get
+rm -rf /var/lib/apt/lists/*
+
+# copy configurations
 COPY ./conf/create_wordpress.sh /tmp/create_wordpress.sh
 
 # Expose port 9000 for PHP-FPM
@@ -25,4 +33,4 @@ WORKDIR /var/www/html
 COPY wordpress /var/www/html
 
 #Configuration must run when container starts
-ENTRYPOINT ["/tmp/wordpress_conf.sh"]
+ENTRYPOINT ["/tmp/create_wordpress.sh"]
