@@ -1,26 +1,83 @@
-version: '2.23.3'
+version: '3.9'
 
+# Mandatory part
 services:
-  nginx:
-    image: debian:bullseye
-    # Add Nginx configuration and other settings as needed
-    # ...
+    nginx:
+         # Setting name to avoid default naming scheme (projectname_servicename)
+        container_name: nginx
+        # Image to use. Will be made from a dockerfile specified in build
+        build:          ./requirements/nginx/
+        # Name of image created with build
+        image:          nginx
+        networks:
+            - inception
+        ports:
+            - "443:443"
+        volumes:
+            - wordpress_data:/var/www/html
+            # Mounts the ssl certificates from the host to the container.
+            # :ro -> read only
+            - /home/mpatrao/data/nginx-selfsigned.key:/etc/ssl/private/nginx-selfsigned.key:ro
+            - /home/mpatrao/data/nginx-selfsigned.crt:/etc/ssl/certs/nginx-selfsigned.crt:ro
+        env_file:       /home/mpatrao/data/.env
+        depends_on:
+            - wordpress
+        restart:        on-failure
+    wordpress:
+        container_name: wordpress
+        build:          ./requirements/wordpress/
+        image:          wordpress
+        networks:
+            - inception
+        volumes:
+            - wordpress_data:/var/www/html
+        env_file:       /home/mpatrao/data/.env
+        depends_on:
+            mariadb:
+                condition: service_healthy
+        restart:        on-failure
+    mariadb:
+        container_name: mariadb
+        build:          ./requirements/mariadb/
+        image:          mariadb
+        networks:
+            - inception
+        volumes:
+            - mariadb_data:/var/lib/mysql
+        env_file:       /home/mpatrao/data/.env
+        restart:        on-failure
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "--silent"]
+            interval: 5s
+            timeout: 30s
+            retries: 5
+            start_period: 5s
+networks:
+    inception:
+        # Setting name to avoid default naming scheme (projectname_networkname)
+        name: inception
+        # Redundant since bridge is default. Included for clarity.
+        # Creates private network on the host and each connected container is
+        # assigned an IP address.
+        driver: bridge
 
-  wordpress:
-    image: debian:bullseye
-    # Add WordPress configuration and other settings as needed
-    environment:
-      - WORDPRESS_DB_HOST=mariadb
-      - WORDPRESS_DB_USER=${WORDPRESS_DB_USER}
-      - WORDPRESS_DB_PASSWORD=${WORDPRESS_DB_PASSWORD}
-      - WORDPRESS_DB_NAME=${WORDPRESS_DB_NAME}
-    # ...
-
-  mariadb:
-    image: debian:bullseye
-    # Add MariaDB configuration and other settings as needed
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}  
+# Volumes are used by constainers to read and store data. The data is not
+# deleted when containers are removed and can be reused (e.g. restart).
+volumes:
+    wordpress_data:
+        # Local driver is default. Included for clarity.
+        # Local means the volume is stored on the host.
+        driver: local
+        # Specify driver options.
+        driver_opts:
+            type: none
+            # Binds the volume to a directory on the host.
+            # Changes in the container are visible on the host and vice versa.
+            o: bind
+            device: /home/mpatrao/data/wordpress
+    mariadb_data:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: /home/mpatrao/data/mariadb
