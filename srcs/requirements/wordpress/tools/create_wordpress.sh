@@ -19,8 +19,7 @@ else
 	wp theme install bravada --activate --allow-root
 	wp theme status bravada --allow-root
 	echo "[Wordpress startup 8] Setting WP_HOME and WP_SITEURL"
-    wp option update home "https://${DOMAIN_NAME}" --allow-root
-    wp option update siteurl "https://${DOMAIN_NAME}" --allow-root
+
 fi
 
 #Create the directory for the PHP-FPM socket
