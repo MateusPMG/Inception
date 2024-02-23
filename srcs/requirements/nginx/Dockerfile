@@ -3,22 +3,28 @@ FROM debian:bullseye
 
 #update and install nginx, openssl and removes cached files from APT reducing image size
 RUN apt-get update && apt-get install -y nginx openssl && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /run/nginx
 
-#copy configuration settings from config file
-COPY ./conf/nginx.conf /etc/nginx/nginx.conf
+#make html directory
+RUN mkdir -p /var/www /etc/nginx/ssl
 
 #generates a self-signed SSL certificate valid for a year with a RSA key with 4096 bits length
-RUN openssl req -x509 -nodes -days 365 -newkey rsa:4096\
--keyout /etc/nginx/certificate.key \
--out /etc/nginx/certificate.crt \
--subj "C=PT/ST=Lisbon/L=Lisbon/O=42Lisbon/OU=mptrao/CN=mpatrao"
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:4096 -sha256 -nodes \
+-keyout /etc/nginx/ssl/certificate.key  \
+-out /etc/nginx/ssl/certificate.crt \
+-subj "/C=PT/ST=Lisbon/L=Lisbon/O=42Lisbon/OU=mptrao/CN=mpatrao"
 
-#Create directory for Nginx container at runtime
-RUN mkdir -p /etc/nginx
+#crt tester
+RUN ls -la /etc/nginx
+
+#copy configuration settings from config file
+COPY ./conf/nginx.conf /etc/nginx/conf.d
 
 #Informs developers of the port ibtended to be exposed by the container\
 EXPOSE 443
+
+
 
 #Start NGINX container and ensures it does not daemonize itself
 #thus i force to stay running in the foreground because docker expects containers to.

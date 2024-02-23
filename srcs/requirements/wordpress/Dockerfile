@@ -13,15 +13,20 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install wordpress cli in the local host, the script will then set it up
-apt-get install -y wget && \
-wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar &&\
-chmod +x wp-cli.phar && \
-mv wp-cli.phar /usr/bin/wp && \
+RUN apt-get update && apt-get install -y curl \
+    && curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && chmod +x wp-cli.phar \
+    && mv wp-cli.phar /usr/local/bin/wp \
 # Clean up after installation, removes package lists from apt-get
-rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
+
 
 # copy configurations
-COPY ./conf/create_wordpress.sh /tmp/create_wordpress.sh
+COPY ./tools/create_wordpress.sh /tmp/create_wordpress.sh
+
+# give exec permission
+RUN chmod +x /tmp/create_wordpress.sh
+
 
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
@@ -29,8 +34,6 @@ EXPOSE 9000
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy WordPress files into the container 
-COPY wordpress /var/www/html
 
 #Configuration must run when container starts
 ENTRYPOINT ["/tmp/create_wordpress.sh"]

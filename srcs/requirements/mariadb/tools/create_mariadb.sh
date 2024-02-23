@@ -1,40 +1,42 @@
-#checks if run/mysqld exists, if not makes it and changes ownership to mysql user and group
-if [ ! -d "/run/mysqld" ]; then
-    mkdir -p /run/mysqld
-    chown -R mysql:mysql /run/mysqld
+#!/bin/sh
+
+# Check if the database directory exists; if not, configure MariaDB
+if [ ! -d "/var/lib/mysql/$MYSQL_DATABASE" ]; then
+
+# Start MariaDB service
+service mariadb start
+
+# Run mysql_secure_installation non-interactively
+mysql_secure_installation << END
+
+Y
+$MYSQL_ROOT_PASSWORD
+$MYSQL_ROOT_PASSWORD
+Y
+Y
+Y
+Y
+END
+echo "MariaDB configured"
+# Create database, user and grant privileges
+echo "Creating database $MYSQL_DATABASE..."
+    sleep 1
+    mysql -u root -e "CREATE DATABASE $MYSQL_DATABASE;"
+    mysql -u root -e "CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';"
+    mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '$MYSQL_USER'@'%';"
+    mysql -u root -e "FLUSH PRIVILEGES;"
+
+    # Change root password and shutdown MariaDB
+    mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';"
+    mysql -u root -p$MYSQL_ROOT_PASSWORD -e "FLUSH PRIVILEGES;"
+    mysqladmin -u root -p$MYSQL_ROOT_PASSWORD shutdown
+
+else
+    sleep 1
+    echo "The database $MYSQL_DATABASE already exists."
 fi
 
-#checks if mariadb database directory  exists in the local host if not then it creates it
-#and initializes it using mysql command line commands
-if [ ! -d /var/lib/mysql/$MDB_NAME ]; then
-    chown -R mysql:mysql /var/lib/mysql
-    mysql_install_db --basedir=/usr --datadir=/var/lib/mysql --user=mysql --rpm > /dev/null
+echo "Done"
 
-#creates a tmp file to store SQL commands for bootstrap install of mariadb
-#sets up database and users and passwords specified by .env
-tfile=$(mktemp)
-if [ ! -f "$tfile" ]; then
-    return 1
-fi
-cat << EOF > $tfile
-USE mysql;
-FLUSH PRIVILEGES;
-DELETE FROM	mysql.user WHERE User='';
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-ALTER USER 'root'@'localhost' IDENTIFIED BY '$MDB_ROOT_PASSWORD';
-CREATE DATABASE $MDB_NAME CHARACTER SET utf8 COLLATE utf8_general_ci;
-CREATE USER '$MDB_USER'@'%' IDENTIFIED by '$MDB_USER_PASSWORD';
-GRANT ALL PRIVILEGES ON $MDB_NAME.* TO '$MDB_USER'@'%';
-FLUSH PRIVILEGES;
-EOF
-
-#initializes MariaDB in bootstrap mode that uses a database user to login into the database
-#and also allows admin related commands
-/usr/sbin/mysqld --user=mysql --bootstrap < $tfile
-rm -f $tfile
-
-#updates mariadb config file to allow remote connections through 0.0.0.0 
-sed -i "s|.*bind-address\s*=.*|bind-address=0.0.0.0|g" /etc/mysql/mariadb.conf.d/50-server.cnf
-
-#starts the mariadbd server in console mode using mysql as user
-exec /usr/sbin/mysqld --user=mysql --console
+# Execute any additional commands passed to the shell script
+exec "$@"

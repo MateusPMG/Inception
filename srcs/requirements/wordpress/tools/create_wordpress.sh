@@ -1,4 +1,4 @@
-
+#!/bin/sh
 # Check if WordPress config file exists
 if [ -f ./wp-config.php ]
 then
@@ -10,7 +10,7 @@ else
 	echo "[Wordpress startup 3] Downloading WordPress"
 	wp core download --allow-root
 	echo "[Wordpress startup 4] Creating wp-config.php"
-	wp config create --dbname=${MDB_NAME} --dbuser=${MDB_USER} --dbpass=${MDB_USER_PASSWORD} --dbhost=${MDB_HOST} --allow-root
+	wp config create --dbname=${MYSQL_DATABASE} --dbuser=${MYSQL_USER} --dbpass=${MYSQL_PASSWORD} --dbhost=${MDB_HOST} --allow-root
 	echo "[Wordpress startup 5] Installing WordPress core"
 	wp core install --url=${DOMAIN_NAME}/wordpress --title=${WP_TITLE} --admin_user=${WP_ADMIN_USER} --admin_password=${WP_ADMIN_PASSWORD} --admin_email=${WP_ADMIN_EMAIL} --allow-root
 	echo "[Wordpress startup 6] Creating WordPress default user"
