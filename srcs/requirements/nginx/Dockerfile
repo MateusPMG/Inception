@@ -15,16 +15,12 @@ RUN openssl req -newkey rsa:4096 -x509 -days 365 -sha256 -nodes \
 -out /etc/nginx/ssl/mpatrao.crt \
 -subj "/C=PT/ST=Lisbon/L=Lisbon/O=42Lisbon/OU=mptrao/CN=mpatrao"
 
-#crt tester
-RUN ls -la /etc/nginx >> a 
 
 #copy configuration settings from config file
 COPY ./conf/nginx.conf /etc/nginx/conf.d
 
 #Informs developers of the port ibtended to be exposed by the container\
 EXPOSE 443
-
-
 
 #Start NGINX container and ensures it does not daemonize itself
 #thus i force to stay running in the foreground because docker expects containers to.
