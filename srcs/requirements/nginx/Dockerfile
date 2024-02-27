@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y nginx openssl && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir -p /run/nginx
 
-#make html directory
+#make html directory and ssl directory
 RUN mkdir -p /var/www /etc/nginx/ssl
 
 #generates a self-signed SSL certificate valid for a year with a RSA key with 4096 bits length
