@@ -25,6 +25,7 @@ RUN mkdir /run/php/ && chmod 755 /run/php
 # copy configurations
 COPY ./tools/create_wordpress.sh /tmp/create_wordpress.sh
 
+#make php7.4 listen to the socket 9000 
 RUN sed -i 's+listen = /run/php/php7.4-fpm.sock+listen = 9000+g' /etc/php/7.4/fpm/pool.d/www.conf
 
 # give exec permission
