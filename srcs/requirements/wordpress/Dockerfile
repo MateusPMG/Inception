@@ -1,6 +1,9 @@
 # Use Debian Bullseye as base image
 FROM debian:bullseye
 
+# Set working directory
+WORKDIR /var/www/html
+
 # Install PHP 7.4 and necessary extensions
 RUN apt-get update && apt-get install -y \
     php7.4 \
@@ -35,9 +38,11 @@ RUN chmod +x /tmp/create_wordpress.sh
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
 
-# Set working directory
-WORKDIR /var/www/html
 
+# Run php-fpm7.4 when the container launches. 
+# php-fpm7.4 will listen for FastCGI requests on port 9000.
+# -F stay in foreground, -R specify the root path
+CMD ["php-fpm7.4", "-F", "-R"]
 
 #Configuration must run when container starts
 ENTRYPOINT ["/tmp/create_wordpress.sh"]

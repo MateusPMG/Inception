@@ -4,7 +4,7 @@ up:
 # -f: Specify a compose file
 # -d: Detached mode: Run containers in the background
 # --build: Build images before starting containers.
-	docker compose -f ./srcs/docker-compose.yml up -d --build
+	docker compose -f ./srcs/docker-compose.yml up --build
 
 down:
 	docker compose -f ./srcs/docker-compose.yml down
@@ -19,7 +19,12 @@ clean:
 # down: Stop and remove containers, networks, images
 # --volumes: also removes volumes
 # --rmi: Remove images.
-	docker compose -f srcs/docker-compose.yml down --volumes --rmi all
+	- docker compose -f srcs/docker-compose.yml down --volumes --rmi all
+	- docker stop $(docker ps -qa)
+	- docker rm $(docker ps -qa)
+	- docker rmi -f $(docker images -qa)
+	- docker volume rm $(docker volume ls -q)
+	- docker network rm $(docker network ls -q) 2>/dev/null
 
 fclean: clean
 # prune: Remove unused data
